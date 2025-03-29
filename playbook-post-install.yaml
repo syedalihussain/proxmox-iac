@@ -7,19 +7,34 @@
           ansible.builtin.replace:
             path: /etc/apt/sources.list.d/pve-enterprise.list
             regexp: "^deb https://enterprise.proxmox.com/debian/pve"
-            replace: "# deb https://enterprise.proxmox.com/debian/pve"
+            replace: "#deb https://enterprise.proxmox.com/debian/pve"
+        - name: Add pve-no-subscription repo for ceph
+          ansible.builtin.replace:
+            path: /etc/apt/sources.list.d/ceph.list
+            regexp: "^deb https://enterprise.proxmox.com/debian/ceph-quincy"
+            replace: "#deb https://enterprise.proxmox.com/debian/ceph-quincy"
         - name: Add community repo
           ansible.builtin.apt_repository:
             repo: "deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription"
             state: present
             filename: pve-community.list
+        - name: Add community repo for ceph
+          ansible.builtin.apt_repository:
+            repo: "deb http://download.proxmox.com/debian/ceph-quincy {{ ansible_distribution_release }} no-subscription"
+            state: present
+            filename: pve-community.list
 
     - name: Update system and reboot
+      debugger: on_failed
       ansible.builtin.apt:
         update_cache: yes
         upgrade: dist
-        autoremove: yes
+        autoclean: yes
       notify: reboot_server
+
+    # - name: Simple echo command
+    #   ansible.builtin.command: echo "hello world"
+    #   notify: reboot_server
 
     - name: Configure GRUB parameters
       ansible.builtin.lineinfile:
@@ -28,18 +43,51 @@
         line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"' # Removed  init_on_alloc=0
       notify: reboot_server
 
+    - name: Gather the package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    # - name: Print the package facts
+    #   ansible.builtin.debug:
+    #     var: ansible_facts.packages
+
     - name: Configure SSH hardening
-      ansible.builtin.ssh_config:
-        section: All
-        option: AllowTcpForwarding
-        value: "no"
+      ansible.builtin.lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?AllowTcpForwarding.*'
+        line: 'AllowTcpForwarding no'
+        backup: yes
+        state: present
       when: "'sshd' in ansible_facts.packages"
 
-    - name: Create admin user with sudo
-      ansible.builtin.user:
-        name: "{{ admin_user }}"
-        groups: sudo
-        ssh_key: "ssh-ed25519 AAAAC3Nz..." # Add your SSH public key
+    # - name: Setup firewall rules
+    #   community.general.ufw:
+    #     rule: "{{ item.rule }}"
+    #     direction: "{{ item.direction }}"
+    #     interface: "{{ item.interface | default(omit) }}"
+    #     proto: "{{ item.proto | default('tcp') }}"
+    #     src: "{{ item.src }}"
+    #     dest_port: "{{ item.port }}"
+    #     state: enabled
+    #   loop:
+    #     - { rule: allow, direction: in, proto: tcp, port: 8006, src: "{{ ssh_allowed_ips | join(',') }}" }
+    #     - { rule: allow, direction: in, proto: tcp, port: 22, src: "{{ ssh_allowed_ips | join(',') }}" }
+
+    - name: Install essential tools
+      ansible.builtin.apt:
+        name:
+          - fail2ban
+          - zfsutils-linux
+          - iftop
+          - iotop
+          - qemu-guest-agent
+        state: present
+
+    # - name: Create admin user with sudo
+    #   ansible.builtin.user:
+    #     name: "{{ admin_user }}"
+    #     groups: sudo
+    #     ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDBc+tvV5PP/OBD9FOdNNLi2L8f5JHzIJZga6o8JTrzS hussain.syedalishah@gmail.com" # Add your SSH public key
 
 
     # - name: Disable root SSH access
@@ -48,3 +96,9 @@
     #     regexp: '^PermitRootLogin'
     #     line: 'PermitRootLogin no'
     #   notify: restart_ssh
+  handlers:
+    - name: reboot_server
+      ansible.builtin.reboot:
+        msg: "Rebooting to apply kernel changes"
+        reboot_command: shutdown -r now
+        reboot_timeout: 300
