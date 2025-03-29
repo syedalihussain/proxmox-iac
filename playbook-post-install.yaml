@@ -1,5 +1,19 @@
 ---
 - hosts: all
+  vars:
+    # Network Configuration
+    # management_ip: "192.168.1.100"
+    # default_gateway: "192.168.1.1"
+    # dns_servers: "8.8.8.8 8.8.4.4"
+    # mtu_size: 9000
+    
+    # # ZFS Configuration
+    # zfs_arc_max: "4294967296"  # 4GB
+    # ashift_value: "12"
+    
+    # Security
+    admin_user: "pve-admin"
+    # ssh_allowed_ips: ["192.168.1.0/24"]
   tasks:
     - name: Configure repositories
       block:
@@ -83,11 +97,11 @@
           - qemu-guest-agent
         state: present
 
-    # - name: Create admin user with sudo
-    #   ansible.builtin.user:
-    #     name: "{{ admin_user }}"
-    #     groups: sudo
-    #     ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDBc+tvV5PP/OBD9FOdNNLi2L8f5JHzIJZga6o8JTrzS hussain.syedalishah@gmail.com" # Add your SSH public key
+    - name: Create admin user with sudo
+      ansible.builtin.user:
+        name: "{{ admin_user }}"
+        groups: sudo
+        ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDBc+tvV5PP/OBD9FOdNNLi2L8f5JHzIJZga6o8JTrzS hussain.syedalishah@gmail.com" # Add your SSH public key
 
 
     # - name: Disable root SSH access
