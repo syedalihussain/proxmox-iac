@@ -6,13 +6,14 @@
     # default_gateway: "192.168.1.1"
     # dns_servers: "8.8.8.8 8.8.4.4"
     # mtu_size: 9000
-    
+
     # # ZFS Configuration
     # zfs_arc_max: "4294967296"  # 4GB
     # ashift_value: "12"
-    
+
     # Security
     admin_user: "pve-admin"
+    ssh_public_key: "{{ lookup('file', '/root/.ssh/id_ed25519.pub') }}"
     # ssh_allowed_ips: ["192.168.1.0/24"]
   tasks:
     - name: Configure repositories
@@ -68,8 +69,8 @@
     - name: Configure SSH hardening
       ansible.builtin.lineinfile:
         path: /etc/ssh/sshd_config
-        regexp: '^#?AllowTcpForwarding.*'
-        line: 'AllowTcpForwarding no'
+        regexp: "^#?AllowTcpForwarding.*"
+        line: "AllowTcpForwarding no"
         backup: yes
         state: present
       when: "'sshd' in ansible_facts.packages"
@@ -97,12 +98,16 @@
           - qemu-guest-agent
         state: present
 
-    - name: Create admin user with sudo
-      ansible.builtin.user:
-        name: "{{ admin_user }}"
-        groups: sudo
-        ssh_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDBc+tvV5PP/OBD9FOdNNLi2L8f5JHzIJZga6o8JTrzS hussain.syedalishah@gmail.com" # Add your SSH public key
-
+    # The pve-admin needs to be created using proxmox specific commands.
+    # - name: Create admin user with sudo
+    #   ansible.builtin.user:
+    #     name: "{{ admin_user }}"
+    #     groups: sudo
+    #     generate_ssh_key: true
+    #     ssh_key_file: "{{ lookup('file', '/root/.ssh/id_ed25519') }}"
+    #     ssh_key_comment: "ansible-generated on $HOSTNAME"
+    #     # ssh_public_key: "{{ ssh_public_key }}"
+    #     ssh_key_type: ed25519
 
     # - name: Disable root SSH access
     #   ansible.builtin.lineinfile:
