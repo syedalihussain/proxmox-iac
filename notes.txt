@@ -1,0 +1,15 @@
+pve-no-subscription
+OEM install so that template does not have system IDs
+    https://www.youtube.com/watch?v=xD9Xyt2mdSI
+    apt install qemu-guest-agent
+HDD passthough
+    nano /etc/pve/qemu-server/100.conf
+Link Aggregation
+    https://www.youtube.com/watch?v=DlWXQrIhYQk
+Create Tags for VLANs
+
+https://www.youtube.com/watch?v=VAJWUZ3sTSI
+    Trusted TLS Certificates
+    Setup backup jobs
+https://www.youtube.com/watch?v=GoZaMgEgrHw&t
+    VLAN aware
