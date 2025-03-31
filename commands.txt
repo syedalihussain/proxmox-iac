@@ -1,1 +1,21 @@
 docker run -v ./:/workdir -v ~/.ssh:/root/.ssh -w /workdir --rm -it alpine/ansible:2.18.1 ansible-playbook -i inventory.yaml -k -u root playbook-post-install.yaml
+
+virt-customize -a ubuntu-22.04-minimal-cloudimg-amd64.qcow2  --install qemu-guest-agent
+
+1. virt-customize -a yaimage.img --install qemu-guest-agent
+2. virt-customize -a yaimage.img --run-command "sudo echo > /etc/machine-id; sudo ln -sf /etc/machine-id /var/lib/dbus/machine-id"
+...and what I do also:
+3. virt-customize -a yaimage.img --root-password password:yourpass - set root password
+4. virt-customize -a yaimage.img --timezone "Europe/Kiev" - set ya time zone
+5. virt-customize -a yaimage.img --install <package_name> - install some packages, for example qemu-guest-agent
+6. virt-edit yaimage.img /etc/cloud/cloud.cfg - system setup, for example enable root
+7. virt-edit yaimage.img /etc/ssh/sshd_config - ssh setup, for example enable password authentication and etc...
+
+# Creating a VM
+qm set 500 --serial0 socket --vga serial0
+
+apt-get install libguestfs-tools
+
+qm importdisk 500 ubuntu-22.04-minimal-cloudimg-amd64.qcow2 local-lvm
+
+lsblk -o +MODEL,SERIAL
