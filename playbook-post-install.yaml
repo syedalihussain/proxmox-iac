@@ -39,24 +39,37 @@
             state: present
             filename: pve-community
 
-    - name: Update system and reboot
-      debugger: on_failed
-      ansible.builtin.apt:
-        update_cache: yes
-        upgrade: dist
-        autoclean: yes
-      notify: reboot_server
+    - name: List current PAM users
+      ansible.builtin.command: pveum user list --output-format=json
+      register: current_users
+
+    - name: Extract current userids
+      ansible.builtin.set_fact:
+        current_userids: "{{ (current_users.stdout | ansible.builtin.from_json) | map(attribute='userid') | list }}"
+
+    - name: Display all ports from cluster1
+      ansible.builtin.debug:
+        var: current_userids
+
+    # This works but takes a lot of time`
+    # - name: Update system and reboot
+    #   debugger: on_failed
+    #   ansible.builtin.apt:
+    #     update_cache: yes
+    #     upgrade: dist
+    #     autoclean: yes
+    #   notify: reboot_server
 
     # - name: Simple echo command
     #   ansible.builtin.command: echo "hello world"
     #   notify: reboot_server
 
-    - name: Configure GRUB parameters
-      ansible.builtin.lineinfile:
-        path: /etc/default/grub
-        regexp: "^GRUB_CMDLINE_LINUX_DEFAULT="
-        line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"' # Removed  init_on_alloc=0
-      notify: reboot_server
+    # - name: Configure GRUB parameters
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/default/grub
+    #     regexp: "^GRUB_CMDLINE_LINUX_DEFAULT="
+    #     line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"' # Removed  init_on_alloc=0
+    #   notify: reboot_server
 
     - name: Gather the package facts
       ansible.builtin.package_facts:
@@ -66,14 +79,14 @@
     #   ansible.builtin.debug:
     #     var: ansible_facts.packages
 
-    - name: Configure SSH hardening
-      ansible.builtin.lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: "^#?AllowTcpForwarding.*"
-        line: "AllowTcpForwarding no"
-        backup: yes
-        state: present
-      when: "'sshd' in ansible_facts.packages"
+    # - name: Configure SSH hardening
+    #   ansible.builtin.lineinfile:
+    #     path: /etc/ssh/sshd_config
+    #     regexp: "^#?AllowTcpForwarding.*"
+    #     line: "AllowTcpForwarding no"
+    #     backup: yes
+    #     state: present
+    #   when: "'sshd' in ansible_facts.packages"
 
     # - name: Setup firewall rules
     #   community.general.ufw:
@@ -88,15 +101,15 @@
     #     - { rule: allow, direction: in, proto: tcp, port: 8006, src: "{{ ssh_allowed_ips | join(',') }}" }
     #     - { rule: allow, direction: in, proto: tcp, port: 22, src: "{{ ssh_allowed_ips | join(',') }}" }
 
-    - name: Install essential tools
-      ansible.builtin.apt:
-        name:
-          - fail2ban
-          - zfsutils-linux
-          - iftop
-          - iotop
-          - qemu-guest-agent
-        state: present
+    # - name: Install essential tools
+    #   ansible.builtin.apt:
+    #     name:
+    #       - fail2ban
+    #       - zfsutils-linux
+    #       - iftop
+    #       - iotop
+    #       - qemu-guest-agent
+    #     state: present
 
     # The pve-admin needs to be created using proxmox specific commands.
     # - name: Create admin user with sudo
