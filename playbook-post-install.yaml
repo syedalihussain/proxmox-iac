@@ -1,5 +1,9 @@
 ---
 - hosts: all
+  # vars_prompt:
+  #   - name: terraform_password
+  #     prompt: "Enter the secret"
+  #     private: true
   vars:
     # Network Configuration
     # management_ip: "192.168.1.100"
@@ -55,7 +59,15 @@
       block:
         - name: Add a new user for terraform
           # ansible.builtin.command: pveum user add terraform@pam --comment "Ansible created user for terraform iac" --password
-          ansible.builtin.command: echo "Hello World!"
+          ansible.builtin.command: pveum user add terraform@pam --comment "Ansible created user for terraform iac"
+        - name: Add a token for the newly created terraform user
+          ansible.builtin.command: pveum user token add terraform@pam terraform_token
+          register: terraform_token
+        - name: Display Token Credentials
+          ansible.builtin.debug:
+            msg: |
+              API Token ID: {{ pm_user }}!{{ token_name }}
+              API Token Secret: "{{ token_result.data.info.secret }}"
       when: "'root@pam' in current_userids"
 
     # This works but takes a lot of time`
