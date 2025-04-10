@@ -51,52 +51,54 @@
       ansible.builtin.set_fact:
         current_userids: "{{ (current_users.stdout | ansible.builtin.from_json) | map(attribute='userid') | list }}"
 
-    - name: Display all ports from cluster1
+    - name: Display the current userids
       ansible.builtin.debug:
         var: current_userids
 
-    - name: Configure user for terraform
+    - name: Configure Terraform user for IAC
       block:
-        - name: Add a new user for terraform
-          # ansible.builtin.command: pveum user add terraform@pam --comment "Ansible created user for terraform iac" --password
-          ansible.builtin.command: pveum user add terraform@pam --comment "Ansible created user for terraform iac"
-        - name: Add a token for the newly created terraform user
-          ansible.builtin.command: pveum user token add terraform@pam terraform_token
+        - name: Add a new Terraform user
+          ansible.builtin.command: pveum user add terraform@pam --comment "Ansible created user for Terraform iac"
+        - name: Add a token for the newly created Terraform user
+          ansible.builtin.command: pveum user token add terraform@pam terraform --output-format=json
           register: terraform_token
+        - name: Convert the token string to a json
+          ansible.builtin.set_fact:
+            terraform_tokenid: "{{ (terraform_token.stdout | ansible.builtin.from_json)['full-tokenid'] }}"
+            terraform_tokenvalue: "{{ (terraform_token.stdout | ansible.builtin.from_json)['value'] }}"
         - name: Display Token Credentials
           ansible.builtin.debug:
             msg: |
-              API Token ID: {{ pm_user }}!{{ token_name }}
-              API Token Secret: "{{ token_result.data.info.secret }}"
-      when: "'root@pam' in current_userids"
+              terraform_tokenid: {{ terraform_tokenid }}
+              terraform_tokenvalue: {{ terraform_tokenvalue }}
+      when: "'terraform@pam' not in current_userids"
 
-    # This works but takes a lot of time`
-    # - name: Update system and reboot
-    #   debugger: on_failed
-    #   ansible.builtin.apt:
-    #     update_cache: yes
-    #     upgrade: dist
-    #     autoclean: yes
-    #   notify: reboot_server
+    - name: Update system and reboot
+      debugger: on_failed
+      ansible.builtin.apt:
+        update_cache: yes
+        upgrade: dist
+        autoclean: yes
+      notify: reboot_server
 
     # - name: Simple echo command
     #   ansible.builtin.command: echo "hello world"
     #   notify: reboot_server
 
-    # - name: Configure GRUB parameters
-    #   ansible.builtin.lineinfile:
-    #     path: /etc/default/grub
-    #     regexp: "^GRUB_CMDLINE_LINUX_DEFAULT="
-    #     line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"' # Removed  init_on_alloc=0
-    #   notify: reboot_server
+    - name: Configure GRUB parameters
+      ansible.builtin.lineinfile:
+        path: /etc/default/grub
+        regexp: "^GRUB_CMDLINE_LINUX_DEFAULT="
+        line: 'GRUB_CMDLINE_LINUX_DEFAULT="quiet intel_iommu=on"' # Removed  init_on_alloc=0
+      notify: reboot_server
 
     - name: Gather the package facts
       ansible.builtin.package_facts:
         manager: auto
 
-    # - name: Print the package facts
-    #   ansible.builtin.debug:
-    #     var: ansible_facts.packages
+    - name: Print the package facts
+      ansible.builtin.debug:
+        var: ansible_facts.packages
 
     # - name: Configure SSH hardening
     #   ansible.builtin.lineinfile:
@@ -120,15 +122,15 @@
     #     - { rule: allow, direction: in, proto: tcp, port: 8006, src: "{{ ssh_allowed_ips | join(',') }}" }
     #     - { rule: allow, direction: in, proto: tcp, port: 22, src: "{{ ssh_allowed_ips | join(',') }}" }
 
-    # - name: Install essential tools
-    #   ansible.builtin.apt:
-    #     name:
-    #       - fail2ban
-    #       - zfsutils-linux
-    #       - iftop
-    #       - iotop
-    #       - qemu-guest-agent
-    #     state: present
+    - name: Install essential tools
+      ansible.builtin.apt:
+        name:
+          - fail2ban
+          - zfsutils-linux
+          - iftop
+          - iotop
+          - qemu-guest-agent
+        state: present
 
     # The pve-admin needs to be created using proxmox specific commands.
     # - name: Create admin user with sudo
