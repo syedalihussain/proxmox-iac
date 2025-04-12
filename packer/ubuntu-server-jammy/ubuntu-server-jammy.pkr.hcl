@@ -66,7 +66,7 @@ source "proxmox" "ubuntu-server-jammy" {
     network_adapters {
         model = "virtio"
         bridge = "vmbr0"
-        firewall = "false"
+        firewall = "true"
     }
 
     # VM Cloud-Init Settings

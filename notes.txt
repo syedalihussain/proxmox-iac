@@ -13,3 +13,25 @@ https://www.youtube.com/watch?v=VAJWUZ3sTSI
     Setup backup jobs
 https://www.youtube.com/watch?v=GoZaMgEgrHw&t
     VLAN aware
+
+# Not needed so far
+- name: Gather the package facts
+    ansible.builtin.package_facts:
+    manager: auto
+
+- name: Print the package facts
+    ansible.builtin.debug:
+    var: ansible_facts.packages
+
+For creating a cloud-init VM
+qm create 900 --memory 2048 --net0 virtio,bridge=vmbr0 --scsihw virtio-scsi-pci
+qm set 900 --serial0 socket --vga serial0
+qm set 900 --scsi0 local-lvm:0,import-from=/root/ubuntu.qcow2
+qm set 900 --ide2 local-lvm:cloudinit
+qm set 900 --boot order=scsi0
+
+qm template 900
+
+# This might have to come right after downloading the image
+qemu-img resize ubuntu.qcow2 32G
+qm importdisk 900 ubuntu.qcow2 local-lvm
