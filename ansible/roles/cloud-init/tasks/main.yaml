@@ -1,0 +1,11 @@
+- name: Download the Debian Bookworm genericcloud image file
+  ansible.builtin.get_url:
+    url: "https://cdimage.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+    dest: "/root/"
+    checksum: "sha512:0ea74c246c5eb8c6eb5b8e3b8b5268b16a791dfbc8f0bca27d9d787a3f4c50a7830bfc690e6902dfe78031fb2b2c3892349990d6b26b13112252a81d6f20f792"
+
+- name: Download the Ubuntu Server Bookworm genericcloud image file
+  ansible.builtin.get_url:
+    url: "https://cloud-images.ubuntu.com/minimal/releases/jammy/release/ubuntu-22.04-minimal-cloudimg-amd64.img"
+    dest: "/root/"
+    checksum: "sha256:21f48a5213d6fa6ca61dbd80035eb94842e3ccb17d9f509626807d5bd6ac329a"
