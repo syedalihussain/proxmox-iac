@@ -1,0 +1,45 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US
+  keyboard:
+    layout: us
+  ssh:
+    install-server: true
+    allow-pw: true
+    # ssh_authorized_keys: [ssh-ed25519 AAAAC....VNH92xglz69VE ali.hussain@GHX...VHK]
+    # disable_root: true
+    # ssh_quiet_keygen: true
+    # allow_public_ssh_keys: true
+  packages:
+    - qemu-guest-agent
+    - sudo
+  late-commands:
+    #   - while [ ! -f /run/finish-late ]; do sleep 30; done
+    #   - curtin in-target -- systemctl start qemu-guest-agent
+    #   - curtin in-target -- systemctl enable qemu-guest-agent
+    - curtin in-target --target=/target -- systemctl start qemu-guest-agent
+    - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+  storage:
+    layout:
+      name: direct
+    swap:
+      size: 0
+  # shutdown: reboot
+  user-data:
+    # runcmd:
+    #   - ['sh', '-c', 'apt install -y qemu-guest-agent']
+    #   - ['sh', '-c', 'systemctl start qemu-guest-agent']
+    #   - ['sh', '-c', 'systemctl enable qemu-guest-agent']
+    package_upgrade: false
+    timezone: Australia/Sydney
+    users:
+      - name: ali
+        groups: [adm, sudo]
+        lock_passwd: false
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        shell: /bin/bash
+        passwd: $6$.Kui7g9sT6FcehQj$YOVPl3NTygMLv07Ett360sf8r/ZSqsUcTqMS8vlSodh4zZj8vbu5s2hBd8C/KZ.auMQA3h.ADnj13FJRpL1mS1
+        # - or -
+        # ssh-authorized-keys:
+        #   - ssh-ed25519 AAAAC3Nz.....E69tUTVNH92xglz69VE ali.hussain@GH...VHK
