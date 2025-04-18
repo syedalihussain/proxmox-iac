@@ -47,6 +47,7 @@ resource "proxmox_vm_qemu" "terraform" {
     }
   }
 
+  skip_ipv6 = true
   network {
     id       = 0
     bridge   = "vmbr0"
