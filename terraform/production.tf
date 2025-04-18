@@ -11,8 +11,8 @@ resource "proxmox_vm_qemu" "terraform" {
 
   os_type  = "cloud-init"
   cpu_type = "host"
-  cores    = 2
-  memory   = 1024
+  cores    = 4
+  memory   = 4096
 
   # Cloud-Init configuration
   ipconfig0 = "ip=dhcp,ip6=dhcp"
