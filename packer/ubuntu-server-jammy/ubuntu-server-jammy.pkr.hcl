@@ -28,9 +28,13 @@ source "proxmox-iso" "ubuntu-server-jammy" {
 
   # VM General Settings
   node = "proxmoxau"
-  vm_id = "503"
-  vm_name = "ubuntu-server-2204-packer-template"
-  template_description = "Ubuntu Server Jammy Image - Built using Packer"
+  vm_id = "502"
+  vm_name = "ubuntu-server-2204"
+  template_description = <<EOT
+  Ubuntu Server Jammy Image - Built using Packer
+  Packages:
+  - docker
+  EOT
 
   # VM OS Settings
   os = "l26"
@@ -47,24 +51,16 @@ source "proxmox-iso" "ubuntu-server-jammy" {
   # VM Hard Disk Settings
   scsi_controller = "virtio-scsi-pci"
   disks {
-    disk_size = "100G"
-    format = "raw"
-    storage_pool = "seagate-barr-1TB"
+    disk_size = "25G"
+    storage_pool = "local-lvm"
     type = "scsi"
   }
 
-  # disks {
-  #   disk_size = "50G"
-  #   format = "raw"
-  #   storage_pool = "seagate-barr-1TB"
-  #   type = "scsi"
-  # }
-  # VM CPU Settings
-  cores = "4"
+  # VM Memory and CPU Settings
+  cores = "2"
   cpu_type = "host"
   sockets = 1
-  # VM Memory Settings
-  memory = "4096"
+  memory = "2048"
 
   # VM Network Settings
   network_adapters {
@@ -76,7 +72,7 @@ source "proxmox-iso" "ubuntu-server-jammy" {
   # VM Cloud-Init Settings
   cloud_init = true
   cloud_init_storage_pool = "local-lvm"
-  # cloud_init_disk_type = "ide"
+  tags = "cloudinit;packer"
 
   # PACKER Boot Commands
   boot_command = [
@@ -101,7 +97,7 @@ source "proxmox-iso" "ubuntu-server-jammy" {
   ssh_username = "ali"
 
   # (Option 1) Add your Password here
-  ssh_password = "notaneverydaypassword"
+  ssh_password = "supersimplepassword"
   # - or -
   # (Option 2) Add your Private SSH KEY file here
   # ssh_private_key_file = "~/.ssh/id_ed25519"

@@ -15,22 +15,17 @@ autoinstall:
     - qemu-guest-agent
     - sudo
   late-commands:
-    #   - while [ ! -f /run/finish-late ]; do sleep 30; done
-    #   - curtin in-target -- systemctl start qemu-guest-agent
-    #   - curtin in-target -- systemctl enable qemu-guest-agent
     - curtin in-target --target=/target -- systemctl start qemu-guest-agent
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
+    - "echo 'Created by Curtin' > /target/etc/my-config"
   storage:
     layout:
       name: direct
     swap:
       size: 0
-  # shutdown: reboot
   user-data:
-    # runcmd:
-    #   - ['sh', '-c', 'apt install -y qemu-guest-agent']
-    #   - ['sh', '-c', 'systemctl start qemu-guest-agent']
-    #   - ['sh', '-c', 'systemctl enable qemu-guest-agent']
+    runcmd:
+      - ['touch runcmd.txt'] # This command does not seem to be working at the moment
     package_upgrade: false
     timezone: Australia/Sydney
     users:
@@ -39,7 +34,7 @@ autoinstall:
         lock_passwd: false
         sudo: ALL=(ALL) NOPASSWD:ALL
         shell: /bin/bash
-        passwd: $6$.Kui7g9sT6FcehQj$YOVPl3NTygMLv07Ett360sf8r/ZSqsUcTqMS8vlSodh4zZj8vbu5s2hBd8C/KZ.auMQA3h.ADnj13FJRpL1mS1
+        passwd: $6$hsYN.MYjrwVGqBdI$yyY1/OZBP2xjJ85vvBYBJlunR6TEZHo8Wa8hHj939zgdNjEAk8ybUARrlgiUVlPX6Ioctz8pb6J6.GSpvRENb1
         # - or -
         # ssh-authorized-keys:
         #   - ssh-ed25519 AAAAC3Nz.....E69tUTVNH92xglz69VE ali.hussain@GH...VHK
