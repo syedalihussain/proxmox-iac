@@ -126,6 +126,11 @@
           - qemu-guest-agent
         state: present
 
+    - name: Ensure TrueNAS Scale ISO file exists
+      ansible.builtin.get_url:
+        url: "https://download.sys.truenas.net/TrueNAS-SCALE-Fangtooth/25.04.0/TrueNAS-SCALE-25.04.0.iso"
+        dest: "/root/"
+        checksum: "sha256:ede23d4c70a7fde6674879346c1307517be9854dc79f6a5e016814226457f359"
     # The pve-admin needs to be created using proxmox specific commands.
     # - name: Create admin user with sudo
     #   ansible.builtin.user:
