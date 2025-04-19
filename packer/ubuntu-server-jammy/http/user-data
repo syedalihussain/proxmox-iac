@@ -17,7 +17,7 @@ autoinstall:
   late-commands:
     - curtin in-target --target=/target -- systemctl start qemu-guest-agent
     - curtin in-target --target=/target -- systemctl enable qemu-guest-agent
-    - "echo 'Created by Curtin' > /target/etc/my-config"
+    - "echo 'Created by Curtin' > /target/etc/late-commands-config"
   storage:
     layout:
       name: direct
@@ -25,7 +25,7 @@ autoinstall:
       size: 0
   user-data:
     runcmd:
-      - ['touch runcmd.txt'] # This command does not seem to be working at the moment
+      - ['sh','-c','echo "Created by user-data" >> /etc/user-data-config'] # This command does not seem to be working at the moment
     package_upgrade: false
     timezone: Australia/Sydney
     users:
