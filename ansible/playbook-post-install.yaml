@@ -129,8 +129,14 @@
     - name: Ensure TrueNAS Scale ISO file exists
       ansible.builtin.get_url:
         url: "https://download.sys.truenas.net/TrueNAS-SCALE-Fangtooth/25.04.0/TrueNAS-SCALE-25.04.0.iso"
-        dest: "/root/"
+        dest: "/var/lib/vz/template/iso"
         checksum: "sha256:ede23d4c70a7fde6674879346c1307517be9854dc79f6a5e016814226457f359"
+
+    - name: Ensure Debian Raw file exists
+      ansible.builtin.get_url:
+        url: "https://cdimage.debian.org/images/cloud/bookworm/20250416-2084/debian-12-genericcloud-amd64-20250416-2084.raw"
+        dest: "/root"
+        checksum: "sha512:4f3108b114e1575595241c2e5f8f2ba9271e737980a1c5b70d06fd82df6c914c20e119db2ccda16b609b48bbabb210b06563630293e4acd497be7c3951764dc1"
     # The pve-admin needs to be created using proxmox specific commands.
     # - name: Create admin user with sudo
     #   ansible.builtin.user:
