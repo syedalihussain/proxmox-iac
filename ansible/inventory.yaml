@@ -5,5 +5,5 @@ dell_xps_8700 ansible_host=192.168.8.145
 ansible_user=root
 
 [kubernetes_nodes]
-ubuntu_2204_jammy ansible_host=192.168.8.234
+ubuntu_2204_jammy ansible_host=192.168.8.116
 debian_12_bookworm ansible_host=192.168.8.226
