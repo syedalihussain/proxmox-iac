@@ -93,17 +93,18 @@ qm set 501 --ipconfig0 ip=dhcp
 qm template 501
 
 The Ultimate Create Command
-qm create 501 --name "ubuntu-2204-cloudinit-template" --ostype l26 \
---memory 1024 \
+qemu-img resize /root/debian-12-genericcloud-amd64-20250416-2084.qcow2 32G
+qm create 520 --name "debian-bookwork-12" --ostype l26 \
+--memory 2048 \
 --agent 1 \
 --cpu host --socket 1 --cores 2 \
 --vga serial0 --serial0 socket \
 --net0 virtio,bridge=vmbr0,firewall=1 \
---scsihw virtio-scsi-pci --scsi0 local-lvm:0,import-from=/root/ubuntu-22.04-minimal-cloudimg-amd64.qcow2,format=qcow2,ssd=1,discard=on \
+--scsihw virtio-scsi-single --scsi0 seagate-barr-1TB:0,import-from=/root/debian-12-genericcloud-amd64-20250416-2084.qcow2,format=qcow2,ssd=1,discard=on,iothread=1 \
 --ide0 local-lvm:cloudinit,media=cdrom \
 --ide2 file=none,media=cdrom \
 --boot order='ide2;scsi0;net0' \
 --sshkeys ~/.ssh/authorized_keys \
 --ipconfig0 ip=dhcp \
 --ciuser ali --cicustom "vendor=local:snippets/vendor.yaml" --cipassword $(openssl passwd -6 $CLEARTEXT_PASSWORD) \
---tags ubuntu-template,22.04,cloudinit
+--tags workload,cloudinit
