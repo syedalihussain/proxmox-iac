@@ -4,6 +4,7 @@ resource "proxmox_vm_qemu" "truenas" {
   target_node = "proxmoxau"
   tags        = "personal,truenas-scale"
   protection  = true
+  onboot      = true
 
   bios   = "seabios"
   agent  = 1
@@ -31,9 +32,16 @@ resource "proxmox_vm_qemu" "truenas" {
           discard    = true
         }
       }
+      scsi1 {
+        passthrough {
+          file     = "/dev/disk/by-id/ata-ST16000NM001G-2KK103_ZL28LCZX"
+          iothread = true
+          backup   = false
+        }
+      }
     }
   }
-
+  skip_ipv6 = true
   network {
     id       = 0
     bridge   = "vmbr0"
