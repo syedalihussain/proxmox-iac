@@ -12,7 +12,7 @@ resource "proxmox_vm_qemu" "truenas" {
 
   cpu_type = "host"
   cores    = 2
-  memory   = 8192
+  memory   = 4096
 
   disks {
     ide {
