@@ -1,13 +1,64 @@
 ---
 - hosts: kubernetes_nodes
+  become: true
   vars:
-    ssh_public_key: "{{ lookup('file', '/root/.ssh/id_ed25519.pub') }}"
+    # ssh_public_key: "{{ lookup('file', '/root/.ssh/id_ed25519.pub') }}"
     # ssh_allowed_ips: ["192.168.1.0/24"]
   tasks:
-  - name: Check connectivity
-    ansible.builtin.command: echo 'Created using Ansible' >> /etc/hello.txt
-    register: connectivity
+  - name: Install prerequisites
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+    - netcat-openbsd
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - gpg
 
-  - name: Debugging the variable
-    ansible.builtin.debug:
-      var: connectivity
+  - name: "1. Download Kubernetes .key file (Debian/Ubuntu)"
+    ansible.builtin.get_url:
+      url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key  # Replace with your .key URL
+      dest: /tmp/k8s-apt.key
+      mode: '0644'
+    when: ansible_os_family == 'Debian'
+
+  - name: "3. Convert .key to .gpg (Debian/Ubuntu)"
+    ansible.builtin.command:
+      cmd: "gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg /tmp/k8s-apt.key"
+      creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg  # Ensures idempotency
+    when: ansible_os_family == 'Debian'
+
+  - name: "5. Add GPG key to APT keyring (Debian/Ubuntu)"
+    ansible.builtin.apt_key:
+      file: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      state: present
+    when: ansible_os_family == 'Debian'
+
+  - name: Add kubernetes repository
+    ansible.builtin.apt_repository:
+      repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
+    when: ansible_os_family == 'Debian'
+
+  - name: Install containerd
+    ansible.builtin.apt:
+      name: containerd
+      state: present
+
+  - name: Install kubeadm, kubelet, and kubectl
+    ansible.builtin.apt:
+      name: "{{ item }}"
+      state: present
+    loop:
+    - kubeadm
+    - kubelet
+    - kubectl
+
+  - name: Prevent kubeadm, kubelet and kubectl from upgrading
+    ansible.builtin.dpkg_selections:
+      name: "{{ item }}"
+      selection: hold
+    loop:
+    - kubeadm
+    - kubelet
+    - kubectl
