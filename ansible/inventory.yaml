@@ -1,5 +1,5 @@
 [proxmox_nodes]
-dell_xps_8700 ansible_host=192.168.8.145
+dell_xps_8700 ansible_host=proxmoxau
 
 [proxmox_nodes:vars]
 ansible_user=root

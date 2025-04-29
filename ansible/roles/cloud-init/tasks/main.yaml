@@ -1,26 +1,28 @@
 ---
-- name: Check if the Debian QCOW2 image exists
-  ansible.builtin.stat:
-    path: /root/debian-12-genericcloud-amd64.qcow2
-  register: debian_file_stat
-
-- name: Download the Debian Bookworm genericcloud image file
+- name: Ensure the Debian Bookworm cloud image file exists
   ansible.builtin.get_url:
-    url: "https://cdimage.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
+    url: "https://cdimage.debian.org/images/cloud/bookworm/20250416-2084/debian-12-genericcloud-amd64-20250416-2084.qcow2"
     dest: "/root/"
-    checksum: "sha512:0ea74c246c5eb8c6eb5b8e3b8b5268b16a791dfbc8f0bca27d9d787a3f4c50a7830bfc690e6902dfe78031fb2b2c3892349990d6b26b13112252a81d6f20f792"
-  when: not debian_file_stat.stat.exists
+    checksum: "sha512:72ef23f399ceff56f7e0c213db796d655aaaea833bc18838210a1ab40e531e6acf9b21adc1954b902db8c9b2255bff7a08aed816250e6afc2821550533df457d"
 
 - name: Check if the Ubuntu QCOW2 image exists
   ansible.builtin.stat:
     path: /root/ubuntu-22.04-minimal-cloudimg-amd64.qcow2
   register: ubuntu_file_stat
 
-- name: Download the Ubuntu Server Bookworm genericcloud image file
-  ansible.builtin.get_url:
-    url: "https://cloud-images.ubuntu.com/minimal/releases/jammy/release-20250416/ubuntu-22.04-minimal-cloudimg-amd64.img"
-    dest: "/root/"
-    checksum: "sha256:e8bfde39e0a897ef1dcd6aa7e7726799f9f23105babb8281918a2002fb5a9991"
+- name: Ensure the Ubuntu Jammy cloud image file exists
+  block:
+    - name: Download the Ubuntu Jammy cloud image
+      ansible.builtin.get_url:
+        url: "https://cloud-images.ubuntu.com/minimal/releases/jammy/release-20250416/ubuntu-22.04-minimal-cloudimg-amd64.img"
+        dest: "/root/"
+        checksum: "sha256:e8bfde39e0a897ef1dcd6aa7e7726799f9f23105babb8281918a2002fb5a9991"
+
+    - name: Rename the Ubuntu .img file to .qcow2
+      ansible.builtin.command: mv /root/ubuntu-22.04-minimal-cloudimg-amd64.img /root/ubuntu-22.04-minimal-cloudimg-amd64.qcow2
+      args:
+        creates: /root/ubuntu-22.04-minimal-cloudimg-amd64.qcow2
+        removes: /root/ubuntu-22.04-minimal-cloudimg-amd64.img
   when: not ubuntu_file_stat.stat.exists
 # - name: Create a VM Template Starting for Debian Bookworm
 #   block:

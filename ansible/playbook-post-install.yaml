@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: proxmox_nodes
   # vars_prompt:
   #   - name: terraform_password
   #     prompt: "Enter the secret"
@@ -22,6 +22,11 @@
   roles:
     - cloud-init
   tasks:
+    - name: Add pve-no-subscription repo for ceph
+      ansible.builtin.replace:
+        path: /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
+        regexp: '^(.*)\n(.*(No valid subscription).*)'
+        replace: 'void ({ //Ext.Msg.show({\n\2'
     - name: Configure repositories
       block:
         - name: Add pve-no-subscription repo
@@ -124,6 +129,7 @@
           - iftop
           - iotop
           - qemu-guest-agent
+          - vim
         state: present
 
     - name: Ensure TrueNAS Scale ISO file exists
@@ -132,11 +138,17 @@
         dest: "/var/lib/vz/template/iso"
         checksum: "sha256:ede23d4c70a7fde6674879346c1307517be9854dc79f6a5e016814226457f359"
 
-    - name: Ensure Debian Raw file exists
+    - name: Ensure the Debian Bookworm live netinst ISO exists
       ansible.builtin.get_url:
-        url: "https://cdimage.debian.org/images/cloud/bookworm/20250416-2084/debian-12-genericcloud-amd64-20250416-2084.raw"
-        dest: "/root"
-        checksum: "sha512:4f3108b114e1575595241c2e5f8f2ba9271e737980a1c5b70d06fd82df6c914c20e119db2ccda16b609b48bbabb210b06563630293e4acd497be7c3951764dc1"
+        url: "https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.10.0-amd64-netinst.iso"
+        dest: "/var/lib/vz/template/iso"
+
+    - name: Ensure the Ubuntu Jammy live server ISO file exists
+      ansible.builtin.get_url:
+        url: "https://ir.releases.ubuntu.com/22.04/ubuntu-22.04.5-live-server-amd64.iso"
+        dest: "/var/lib/vz/template/iso"
+        checksum: "sha256:9bc6028870aef3f74f4e16b900008179e78b130e6b0b9a140635434a46aa98b0"
+
     # The pve-admin needs to be created using proxmox specific commands.
     # - name: Create admin user with sudo
     #   ansible.builtin.user:
