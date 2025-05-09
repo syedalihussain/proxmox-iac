@@ -130,7 +130,25 @@
           - iotop
           - qemu-guest-agent
           - vim
+          - python3-pip
         state: present
+
+    - name: Remove EXTERNALLY-MANAGED folder from python
+      ansible.builtin.file:
+        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+        state: absent
+
+    - name: Install python packages
+      ansible.builtin.pip:
+        name: proxmoxer
+
+    - name: Add EXTERNALLY-MANAGED folder from python
+      ansible.builtin.file:
+        path: /usr/lib/python3.11/EXTERNALLY-MANAGED
+        state: touch
+        mode: u=rw,g=r,o=r
+        owner: root
+        group: root
 
     - name: Ensure TrueNAS Scale ISO file exists
       ansible.builtin.get_url:
