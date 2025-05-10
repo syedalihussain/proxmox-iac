@@ -1,0 +1,132 @@
+kubeadm init \
+  --control-plane-endpoint 192.168.8.203 \
+  --upload-certs \
+  --pod-network-cidr=10.244.0.0/16 \                  # Default for Calico/Cilium
+
+
+  To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+
+Alternatively, if you are the root user, you can run:
+
+  export KUBECONFIG=/etc/kubernetes/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of control-plane nodes running the following command on each as root:
+
+  kubeadm join 192.168.8.130:6443 --token 0rowzw.yk9c9kro2gout6jw \
+	--discovery-token-ca-cert-hash sha256:LONGHASH \
+	--control-plane --certificate-key LONGHASH
+
+Please note that the certificate-key gives access to cluster sensitive data, keep it secret!
+As a safeguard, uploaded-certs will be deleted in two hours; If necessary, you can use
+"kubeadm init phase upload-certs --upload-certs" to reload certs afterward.
+
+Then you can join any number of worker nodes by running the following on each as root:
+
+kubeadm join 192.168.8.130:6443 --token 0rowzw.yk9c9kro2gout6jw \
+	--discovery-token-ca-cert-hash sha256:LONGHASH
+
+
+helm repo add cilium https://helm.cilium.io/
+
+helm install cilium cilium/cilium --version 1.17.3 \
+--namespace kube-system \
+--create-namespace \
+--version 1.17.3 \
+--set nodeinit.enabled=true \
+--set nodeinit.reconfigureKubelet=true \
+--set nodeinit.removeCbrBridge=true \
+--set ipam.operator.clusterPoolIPv4PodCIDRList='10.244.0.0/16' \
+--set cni.exclusive=true \
+--set hubble.enabled=true \
+--set hubble.relay.enabled=true \
+--set hubble.tls.enabled=true \
+--set hubble.ui.enabled=true
+
+Enable mTLS for Hubble
+
+helm upgrade --install cilium cilium/cilium --version 1.14.0-snapshot.1 \
+   --namespace kube-system \
+   --values - <<EOF
+operator:
+  prometheus:
+    enabled: true
+kubeProxyReplacement: partial
+hostServices:
+  enabled: false
+  protocols: tcp
+externalIPs:
+  enabled: true
+nodePort:
+  enabled: true
+hostPort:
+  enabled: true
+bpf:
+  masquerade: false
+image:
+  pullPolicy: IfNotPresent
+ipam:
+  mode: kubernetes
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    prometheus:
+      enabled: true
+  ui:
+    enabled: true
+    service:
+      type: LoadBalancer
+  metrics:
+    enableOpenMetrics: true
+    enabled:
+      - dns
+      - drop
+      - tcp
+      - icmp
+      - "httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction;sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity"
+EOF
+
+kubeadm init --control-plane-endpoint=192.168.9.212:6443 --apiserver-advertise-address=192.168.9.212 --pod-network-cidr=10.244.0.0/24 --upload-certs
+
+First cilium cluster has been initialized, Helm Cilium remaining. 
+
+helm install cilium cilium/cilium --version 1.17.3 \
+  --namespace kube-system \
+  --set nodeinit.enabled=true \
+  --set nodeinit.reconfigureKubelet=true \
+  --set nodeinit.removeCbrBridge=true \
+  --set cluster.name=cluster2 \
+  --set cluster.id=2 \
+  --set ipam.operator.clusterPoolIPv4PodCIDRList="172.1.0.0/16" \
+  --set cni.exclusive=true \
+  --set kubeProxyReplacement=true \
+  --set operator.replicas=2 \
+  --set hubble.relay.enabled=true \
+  --set hubble.ui.enabled=true \
+  --set hubble.tls.enabled=true \
+  --set hubble.metrics.enabled="{dns,drop,tcp,flow,port-distribution,icmp,http}"
+
+  --set hubble.enabled=true \
+  --set enableWireguard=true \
+  --set hubble.listenAddress=":4244" \
+
+helm install cilium cilium/cilium --version 1.17.3 \
+--namespace kube-system \
+--set cluster.name=cluster1 \
+--set cluster.id=1 \
+--set ipam.operator.clusterPoolIPv4PodCIDRList="172.1.0.0/16"
+
+helm upgrade cilium cilium/cilium --version 1.17.3 \
+   --namespace kube-system \
+   --reuse-values \
+   --set hubble.relay.enabled=true \
+   --set hubble.ui.enabled=true \
+   --set hubble.metrics.enabled="{dns,drop,tcp,flow,port-distribution,icmp,http}" \
