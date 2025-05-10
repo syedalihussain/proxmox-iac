@@ -1,0 +1,32 @@
+---
+- hosts: proxmox_nodes
+  become: true
+  vars_prompt:
+    - name: api_password
+      prompt: "Enter your Proxmox GUI password"
+      private: yes
+    - name: nextcloud_lxc_password
+      prompt: "Enter your Nextcloud LXC password"
+      private: yes
+  tasks:
+    - name: Create a nextcloud container
+      community.general.proxmox:
+        vmid: 101
+        api_user: root@pam
+        api_password: "{{ api_password }}"
+        api_host: localhost
+        cores: 1
+        password: "{{ nextcloud_lxc_password }}"
+        node: proxmoxau
+        hostname: nextcloud
+        ostemplate: "local:vztmpl/alpine-3.21-default_20241217_amd64.tar.xz"
+        disk: "local-lvm:8"
+        swap: 0
+        netif:
+          net0: "name=eth0,bridge=vmbr0,firewall=1,ip=dhcp,ip6=dhcp,type=veth"
+        mounts: '{"mp0":"/mnt/lxc_shares/nextcloud_rwx/,mp=/mnt/nas"}'
+        # Below doesn't work, but 'mounts' above does
+        # mount_volumes:
+        #   - id: mp0
+        #     host_path: /mnt/lxc_shares/nextcloud_rwx
+        #     mountpoint: /mnt/nas
