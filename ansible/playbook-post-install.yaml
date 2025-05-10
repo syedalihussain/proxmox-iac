@@ -140,7 +140,11 @@
 
     - name: Install python packages
       ansible.builtin.pip:
-        name: proxmoxer
+        name:
+          - proxmoxer
+          - requests
+          - passlib
+        state: present
 
     - name: Add EXTERNALLY-MANAGED folder from python
       ansible.builtin.file:
